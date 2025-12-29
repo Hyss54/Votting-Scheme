@@ -1,4 +1,4 @@
-import { supabase } from './client';
+import { supabase } from './supabase/client';
 import { User, UserRole } from '@/types';
 
 export async function signUp(email: string, password: string, fullName: string, role: UserRole = 'voter') {

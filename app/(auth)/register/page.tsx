@@ -17,7 +17,7 @@ export default function RegisterPage() {
         email: '',
         password: '',
         confirmPassword: '',
-        role: 'voter' as 'voter' | 'nominee',
+        role: 'voter' as 'voter' | 'nominee' | 'admin',
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -80,10 +80,11 @@ export default function RegisterPage() {
                             <select
                                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                                 value={formData.role}
-                                onChange={(e) => setFormData({ ...formData, role: e.target.value as 'voter' | 'nominee' })}
+                                onChange={(e) => setFormData({ ...formData, role: e.target.value as 'voter' | 'nominee' | 'admin' })}
                             >
                                 <option value="voter">Voter</option>
                                 <option value="nominee">Nominee</option>
+                                <option value="admin">Admin</option>
                             </select>
                         </div>
 

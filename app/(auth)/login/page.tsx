@@ -23,9 +23,20 @@ export default function LoginPage() {
 
         try {
             await signIn(formData.email, formData.password);
+
+            // Fetch user role for redirection
+            const { getUserRole } = await import('@/lib/auth');
+            const role = await getUserRole();
+
             toast.success('Login successful!');
-            // Redirect based on user role (implement role-based redirect)
-            router.push('/voter/events');
+
+            if (role === 'admin') {
+                router.push('/admin/events');
+            } else if (role === 'nominee') {
+                router.push('/nominee/dashboard');
+            } else {
+                router.push('/voter/events');
+            }
         } catch (error: any) {
             toast.error(error.message || 'Login failed');
         } finally {
