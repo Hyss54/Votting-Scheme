@@ -9,7 +9,7 @@ export type PaymentMethod = 'paystack' | 'mtn_momo' | 'hubtel';
 export interface User {
     id: string;
     email: string;
-    role: UserRole;
+    roles: UserRole[];
     full_name: string;
     phone?: string;
     created_at: string;

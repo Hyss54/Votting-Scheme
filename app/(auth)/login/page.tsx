@@ -24,15 +24,15 @@ export default function LoginPage() {
         try {
             await signIn(formData.email, formData.password);
 
-            // Fetch user role for redirection
-            const { getUserRole } = await import('@/lib/auth');
-            const role = await getUserRole();
+            // Fetch user roles for redirection
+            const { getUserRoles } = await import('@/lib/auth');
+            const roles = await getUserRoles();
 
             toast.success('Login successful!');
 
-            if (role === 'admin') {
+            if (roles.includes('admin')) {
                 router.push('/admin/events');
-            } else if (role === 'nominee') {
+            } else if (roles.includes('nominee')) {
                 router.push('/nominee/dashboard');
             } else {
                 router.push('/voter/events');

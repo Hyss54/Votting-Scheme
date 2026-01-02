@@ -17,7 +17,7 @@ export async function signUp(email: string, password: string, fullName: string, 
                 id: authData.user.id,
                 email,
                 full_name: fullName,
-                role,
+                roles: [role],
             });
 
         if (profileError) throw profileError;
@@ -55,12 +55,16 @@ export async function getCurrentUser(): Promise<User | null> {
     return profile;
 }
 
-export async function getUserRole(): Promise<UserRole | null> {
+export async function getUserRoles(): Promise<UserRole[]> {
     const user = await getCurrentUser();
-    return user?.role || null;
+    return user?.roles || [];
 }
 
 export async function checkRole(allowedRoles: UserRole[]): Promise<boolean> {
-    const role = await getUserRole();
-    return role ? allowedRoles.includes(role) : false;
+    const userRoles = await getUserRoles();
+    return userRoles.some(role => allowedRoles.includes(role));
+}
+
+export function hasRole(user: User, role: UserRole): boolean {
+    return user.roles.includes(role);
 }

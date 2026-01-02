@@ -10,26 +10,45 @@ import toast from 'react-hot-toast';
 export default function NewEventPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+
+    // Separate state for date and time components
     const [formData, setFormData] = useState({
         name: '',
         description: '',
         vote_price: '',
-        start_date: '',
-        end_date: '',
         status: 'draft' as const,
+        startDate: '',
+        startTime: '',
+        endDate: '',
+        endTime: '',
     });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
+        // Combine date and time
+        const start_date = `${formData.startDate}T${formData.startTime}`;
+        const end_date = `${formData.endDate}T${formData.endTime}`;
+
+        // Basic validation
+        if (!formData.startDate || !formData.startTime || !formData.endDate || !formData.endTime) {
+            toast.error('Please select both date and time for start and end fields');
+            setLoading(false);
+            return;
+        }
+
         try {
             const response = await fetch('/api/events', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    ...formData,
+                    name: formData.name,
+                    description: formData.description,
+                    status: formData.status,
                     vote_price: parseFloat(formData.vote_price),
+                    start_date,
+                    end_date,
                 }),
             });
 
@@ -88,22 +107,46 @@ export default function NewEventPage() {
                             required
                         />
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <Input
-                                label="Start Date"
-                                type="datetime-local"
-                                value={formData.start_date}
-                                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                                required
-                            />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                                <h3 className="font-medium text-gray-700">Start Schedule</h3>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <Input
+                                        label="Date"
+                                        type="date"
+                                        value={formData.startDate}
+                                        onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                                        required
+                                    />
+                                    <Input
+                                        label="Time"
+                                        type="time"
+                                        value={formData.startTime}
+                                        onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                            </div>
 
-                            <Input
-                                label="End Date"
-                                type="datetime-local"
-                                value={formData.end_date}
-                                onChange={(e) => setFormData({ ...formData, end_date: e.target.value })}
-                                required
-                            />
+                            <div className="space-y-4">
+                                <h3 className="font-medium text-gray-700">End Schedule</h3>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <Input
+                                        label="Date"
+                                        type="date"
+                                        value={formData.endDate}
+                                        onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                                        required
+                                    />
+                                    <Input
+                                        label="Time"
+                                        type="time"
+                                        value={formData.endTime}
+                                        onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                                        required
+                                    />
+                                </div>
+                            </div>
                         </div>
 
                         <div>

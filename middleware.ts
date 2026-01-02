@@ -1,35 +1,70 @@
+import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
-    // Add middleware logic here for authentication and authorization
-    // This is a basic implementation - enhance based on your needs
+export async function middleware(request: NextRequest) {
+    let response = NextResponse.next({
+        request: {
+            headers: request.headers,
+        },
+    });
 
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() {
+                    return request.cookies.getAll();
+                },
+                setAll(cookiesToSet) {
+                    cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value));
+                    response = NextResponse.next({
+                        request: {
+                            headers: request.headers,
+                        },
+                    });
+                    cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+                },
+            },
+        }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
     const { pathname } = request.nextUrl;
 
-    // Public routes that don't require authentication
-    const publicRoutes = ['/', '/login', '/register'];
-    const isPublicRoute = publicRoutes.some(route => pathname === route);
+    const publicRoutes = ['/', '/login', '/register', '/api/auth'];
+    const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith('/api/auth'));
 
-    if (isPublicRoute) {
-        return NextResponse.next();
+    if (!user && !isPublicRoute) {
+        return NextResponse.redirect(new URL('/login', request.url));
     }
 
-    // For protected routes, you would check authentication here
-    // This is placeholder - implement with Supabase auth middleware
+    if (user && pathname !== '/dashboard' && !isPublicRoute) {
+        // Fetch users roles
+        const { data: userData } = await supabase
+            .from('users')
+            .select('roles')
+            .eq('id', user.id)
+            .single();
 
-    return NextResponse.next();
+        const userRoles = userData?.roles || [];
+
+        // Role-based protection
+        if (pathname.startsWith('/admin') && !userRoles.includes('admin')) {
+            return NextResponse.redirect(new URL('/voter/events', request.url));
+        }
+
+        if (pathname.startsWith('/nominee') && !userRoles.includes('nominee')) {
+            return NextResponse.redirect(new URL('/voter/events', request.url));
+        }
+    }
+
+    return response;
 }
 
 export const config = {
     matcher: [
-        /*
-         * Match all request paths except for the ones starting with:
-         * - api (API routes)
-         * - _next/static (static files)
-         * - _next/image (image optimization files)
-         * - favicon.ico (favicon file)
-         */
-        '/((?!api|_next/static|_next/image|favicon.ico).*)',
+        '/((?!_next/static|_next/image|favicon.ico).*)',
     ],
 };
