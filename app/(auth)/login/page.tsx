@@ -30,6 +30,11 @@ export default function LoginPage() {
 
             toast.success('Login successful!');
 
+            if (!role) {
+                toast.error('User profile not found. Please contact support.');
+                return;
+            }
+
             if (role === 'admin') {
                 router.push('/admin/events');
             } else if (role === 'nominee') {

@@ -98,6 +98,13 @@ export default function EventsPage() {
                                     <span>GH₵ {event.vote_price} per vote</span>
                                 </div>
                             </div>
+                            <div className="mt-4 pt-4 border-t">
+                                <Link href={`/admin/events/${event.id}/positions`}>
+                                    <Button variant="outline" size="sm" className="w-full">
+                                        Manage Positions / Categories
+                                    </Button>
+                                </Link>
+                            </div>
                         </CardBody>
                     </Card>
                 ))}

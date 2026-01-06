@@ -11,6 +11,7 @@ import { Nominee, Position, Event } from '@/types';
 import { formatCurrency } from '@/lib/utils/helpers';
 import { CreditCard, Smartphone, Wallet, TrendingUp } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export default function EventVotingPage() {
     const params = useParams();
@@ -25,6 +26,17 @@ export default function EventVotingPage() {
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [loading, setLoading] = useState(true);
     const [paymentLoading, setPaymentLoading] = useState(false);
+
+    const [user, setUser] = useState<any>(null);
+    const supabase = createClientComponentClient();
+
+    useEffect(() => {
+        const getUser = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            setUser(session?.user ?? null);
+        };
+        getUser();
+    }, [supabase]);
 
     useEffect(() => {
         async function fetchEventData() {
@@ -63,6 +75,11 @@ export default function EventVotingPage() {
     );
 
     const handleVoteClick = (nominee: Nominee) => {
+        if (!user) {
+            toast.error('Please login to vote');
+            router.push('/login');
+            return;
+        }
         setSelectedNominee(nominee);
         setShowPaymentModal(true);
     };
@@ -71,7 +88,11 @@ export default function EventVotingPage() {
         setPaymentLoading(true);
 
         try {
-            // Mock user data - in production, get from auth context
+            if (!user) {
+                toast.error('User not authenticated');
+                return;
+            }
+
             const response = await fetch('/api/payments/initialize', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -81,9 +102,9 @@ export default function EventVotingPage() {
                     nominee_id: selectedNominee?.id,
                     event_id: eventId,
                     position_id: selectedPosition,
-                    user_email: 'voter@example.com',
-                    user_phone: '0240000000',
-                    user_id: 'mock-user-id',
+                    user_email: user.email,
+                    user_phone: user.phone || '0240000000', // Fallback or fetch from profile
+                    user_id: user.id,
                 }),
             });
 
@@ -125,8 +146,8 @@ export default function EventVotingPage() {
                         key={position.id}
                         onClick={() => setSelectedPosition(position.id)}
                         className={`px-6 py-3 rounded-lg font-medium whitespace-nowrap transition-all ${selectedPosition === position.id
-                                ? 'bg-primary-600 text-white shadow-lg'
-                                : 'bg-white text-gray-700 hover:bg-gray-100'
+                            ? 'bg-primary-600 text-white shadow-lg'
+                            : 'bg-white text-gray-700 hover:bg-gray-100'
                             }`}
                     >
                         {position.name}

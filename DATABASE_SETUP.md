@@ -134,6 +134,9 @@ CREATE POLICY "Users can view own profile" ON users
 CREATE POLICY "Users can update own profile" ON users
   FOR UPDATE USING (auth.uid() = id);
 
+CREATE POLICY "Users can insert their own profile" ON users
+  FOR INSERT WITH CHECK (auth.uid() = id);
+
 -- Events policies
 CREATE POLICY "Everyone can view active events" ON events
   FOR SELECT USING (status = 'active' OR auth.uid() IN (
