@@ -28,14 +28,37 @@ export default function EventVotingPage() {
     const [paymentLoading, setPaymentLoading] = useState(false);
 
     const [user, setUser] = useState<any>(null);
+    const [authReady, setAuthReady] = useState(false);
     const supabase = createClientComponentClient();
 
     useEffect(() => {
         const getUser = async () => {
-            const { data: { session } } = await supabase.auth.getSession();
-            setUser(session?.user ?? null);
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession();
+                if (error) console.error('Auth check error:', error);
+
+                if (session?.user) {
+                    setUser(session.user);
+                } else {
+                    // Try refreshing session
+                    const { data: { session: refreshedSession } } = await supabase.auth.refreshSession();
+                    setUser(refreshedSession?.user ?? null);
+                }
+            } catch (e) {
+                console.error('Auth exception:', e);
+            } finally {
+                setAuthReady(true);
+            }
         };
         getUser();
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user ?? null);
+            setAuthReady(true);
+        });
+
+        return () => subscription.unsubscribe();
     }, [supabase]);
 
     useEffect(() => {
@@ -75,6 +98,11 @@ export default function EventVotingPage() {
     );
 
     const handleVoteClick = (nominee: Nominee) => {
+        if (!authReady) {
+            toast.loading('Checking login status...');
+            return;
+        }
+
         if (!user) {
             toast.error('Please login to vote');
             router.push('/login');

@@ -46,6 +46,7 @@ export interface Nominee {
     name: string;
     bio?: string;
     image_url?: string;
+    vote_count?: number;
     created_at: string;
     updated_at: string;
     votes?: number; // Computed field

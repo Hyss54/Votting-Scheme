@@ -1,24 +1,20 @@
+import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
-    // Add middleware logic here for authentication and authorization
-    // This is a basic implementation - enhance based on your needs
+export async function middleware(req: NextRequest) {
+    const res = NextResponse.next();
+    const supabase = createMiddlewareClient({ req, res });
 
-    const { pathname } = request.nextUrl;
+    // Refresh session if needed
+    const {
+        data: { session },
+    } = await supabase.auth.getSession();
 
-    // Public routes that don't require authentication
-    const publicRoutes = ['/', '/login', '/register'];
-    const isPublicRoute = publicRoutes.some(route => pathname === route);
+    // Optional: Add protected route logic here if needed globally
+    // For now, we rely on page-level checks or return the session refreshed response
 
-    if (isPublicRoute) {
-        return NextResponse.next();
-    }
-
-    // For protected routes, you would check authentication here
-    // This is placeholder - implement with Supabase auth middleware
-
-    return NextResponse.next();
+    return res;
 }
 
 export const config = {

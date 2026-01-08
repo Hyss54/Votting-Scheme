@@ -1,10 +1,14 @@
-import { supabase } from './supabase/client';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import { User, UserRole } from '@/types';
 
 export async function signUp(email: string, password: string, fullName: string, role: UserRole = 'voter') {
+    const supabase = createClientComponentClient();
     const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+            emailRedirectTo: `${window.location.origin}/api/auth/callback`,
+        },
     });
 
     if (authError) throw authError;
@@ -27,21 +31,27 @@ export async function signUp(email: string, password: string, fullName: string, 
 }
 
 export async function signIn(email: string, password: string) {
+    const supabase = createClientComponentClient();
     const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
     });
 
     if (error) throw error;
+
+    // Refresh the router to update server components/middleware states
+    // This is often handled by the caller, but good to ensure session is set
     return data;
 }
 
 export async function signOut() {
+    const supabase = createClientComponentClient();
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
 }
 
 export async function getCurrentUser(): Promise<User | null> {
+    const supabase = createClientComponentClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return null;
